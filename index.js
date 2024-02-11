@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("newGame", (room, playerCount) => {
-      socket.to(room).emit("newGame", playerCount)
+      socket.to(room).emit("newGame", {playerCount})
       moveStacks[room] = []
     })
 
