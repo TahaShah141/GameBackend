@@ -13,6 +13,7 @@ const io = new Server(server, {
     }
 })
 
+
 const moveStacks = {}
 const roomLimits = {}
 
@@ -36,7 +37,9 @@ io.on("connection", (socket) => {
         console.log("Disconnecting:", socket.id)
         for (const room of socket.rooms) {
           if (room !== socket.id) {
-            socket.to(room).emit("disconnected")
+            const size = io.sockets.adapter.rooms.get(room).size
+            const limit = roomLimits[room]
+            setTimeout(() => socket.to(room).emit("disconnected", size, limit), 2000)
           }
         }
     })
