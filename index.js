@@ -15,18 +15,18 @@ const io = new Server(server, {
 
 
 const moveStacks = {}
-const roomLimits = {}
+const roomSettings= {}
 
 io.on("connection", (socket) => {
     console.log("Connected:", socket.id)
     
     socket.on("connected", (room) => {
       const size = io.sockets.adapter.rooms.get(room).size
-      io.in(room).emit("connected", size, roomLimits[room])
+      io.in(room).emit("connected", size, roomSettings[room].playerCount)
     })
     
     socket.on("sync", (room, syncMoves) => {
-      syncMoves(moveStacks[room], roomLimits[room])
+      syncMoves(moveStacks[room], roomSettings[room])
     })
     
     socket.on("disconnect", () => {
@@ -38,15 +38,15 @@ io.on("connection", (socket) => {
         for (const room of socket.rooms) {
           if (room !== socket.id) {
             const size = io.sockets.adapter.rooms.get(room).size
-            const limit = roomLimits[room]
+            const limit = roomSettings[room].playerCount
             setTimeout(() => socket.to(room).emit("disconnected", size, limit), 2000)
           }
         }
     })
 
-    socket.on("makeRoom", (roomID, limit, roomMade) => {
-      roomLimits[roomID] = limit
-      console.log("MADE ROOM", roomID, limit)
+    socket.on("makeRoom", (roomID, settings, roomMade) => {
+      roomSettings[roomID] = settings
+      console.log("MADE ROOM", roomID, settings)
       roomMade()
     })
 
@@ -54,7 +54,7 @@ io.on("connection", (socket) => {
       socket.join(roomID)
       const size = io.sockets.adapter.rooms.get(roomID).size
       if (moveStacks[roomID] === undefined) moveStacks[roomID] = []
-      onJoin(size, roomLimits[roomID])
+      onJoin(size, roomSettings[roomID])
       socket.broadcast.emit("joinRoom", roomID)
     })
 
@@ -67,8 +67,8 @@ io.on("connection", (socket) => {
       moveStacks[room].push(payload)
     })
 
-    socket.on("newGame", (room, playerCount) => {
-      socket.to(room).emit("newGame", {playerCount})
+    socket.on("newGame", (room, settings) => {
+      socket.to(room).emit("newGame", settings)
       moveStacks[room] = []
     })
 
